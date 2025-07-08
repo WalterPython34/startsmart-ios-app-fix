@@ -21,7 +21,6 @@ jobs:
 
     - name: Fix Capacitor Config
       run: |
-        # Convert capacitor.config.js to proper format
         cat > capacitor.config.js << 'EOF'
         const config = {
           appId: 'ai.nextax.startsmart',
@@ -34,7 +33,6 @@ jobs:
             scheme: 'StartSmart'
           }
         };
-
         module.exports = config;
         EOF
 
@@ -43,41 +41,38 @@ jobs:
         npx cap add ios
         npx cap sync ios
 
-    - name: Configure Team ID in Xcode Project
+    - name: Configure Team ID
       run: |
-        # Add Team ID to Xcode project using sed with proper escaping
-        PROJECT_FILE="ios/App/App.xcodeproj/project.pbxproj"
-        sed -i '' '/PRODUCT_BUNDLE_IDENTIFIER = ai\.nextax\.startsmart;/i\
-				DEVELOPMENT_TEAM = NKG2BDUB85;' "$PROJECT_FILE"
+        # Simple approach - replace the Bundle ID lines with Team ID + Bundle ID
+        perl -i -pe 's/^(\s+)PRODUCT_BUNDLE_IDENTIFIER = ai\.nextax\.startsmart;$/$1DEVELOPMENT_TEAM = NKG2BDUB85;\n$1PRODUCT_BUNDLE_IDENTIFIER = ai.nextax.startsmart;/g' ios/App/App.xcodeproj/project.pbxproj
 
-    - name: Setup Ruby and Fastlane
+    - name: Setup Ruby
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: '3.2'
         bundler-cache: false
         working-directory: ios/App
 
-    - name: Create Fastlane Configuration
+    - name: Create Fastlane Files
       run: |
         cd ios/App
         mkdir -p fastlane
         
-        # Create Fastfile
         cat > fastlane/Fastfile << 'EOF'
         default_platform(:ios)
-
+        
         platform :ios do
           lane :beta do
             build_app(
               workspace: "App.xcworkspace",
-              scheme: "App", 
+              scheme: "App",
               configuration: "Release",
               export_method: "app-store"
             )
             upload_to_testflight(
               api_key: {
                 key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
-                issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"], 
+                issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
                 key_filepath: ENV["APP_STORE_CONNECT_API_KEY_PATH"]
               },
               skip_waiting_for_build_processing: true
@@ -86,26 +81,21 @@ jobs:
         end
         EOF
         
-        # Create Gemfile
         cat > fastlane/Gemfile << 'EOF'
         source "https://rubygems.org"
         gem "fastlane"
         EOF
         
-        # Install fastlane
         bundle install
 
-    - name: Deploy to TestFlight
+    - name: Deploy
       env:
         APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
         APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         APP_STORE_CONNECT_API_KEY_PATH: ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8
         TEAM_ID: ${{ secrets.TEAM_ID }}
       run: |
-        # Create API key file
         mkdir -p ~/private_keys
         echo "${{ secrets.APP_STORE_CONNECT_API_KEY }}" | base64 --decode > ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8
-        
-        # Run fastlane deployment
         cd ios/App
         bundle exec fastlane ios beta
