@@ -58,12 +58,13 @@ jobs:
         # Use the correct Team ID from App Store Connect: N6C2SDU8BS
         perl -i -pe 's/^(\s+)PRODUCT_BUNDLE_IDENTIFIER = ai\.nextax\.startsmart;$/$1DEVELOPMENT_TEAM = N6C2SDU8BS;\n$1PRODUCT_BUNDLE_IDENTIFIER = ai.nextax.startsmart;/g' ios/App/App.xcodeproj/project.pbxproj
 
-    - name: Setup Ruby
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: '3.2'
-        bundler-cache: false
-        working-directory: ios/App
+    - name: Setup Ruby and Bundler
+      run: |
+        gem install bundler
+        cd ios/App
+        bundle init
+        echo 'gem "fastlane"' >> Gemfile
+        bundle install
 
     - name: Create Fastlane Files
       run: |
@@ -92,15 +93,8 @@ jobs:
           end
         end
         EOF
-        
-        cat > fastlane/Gemfile << 'EOF'
-        source "https://rubygems.org"
-        gem "fastlane"
-        EOF
-        
-        bundle install
 
-    - name: Deploy
+    - name: Deploy to TestFlight
       env:
         APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
         APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
