@@ -26,8 +26,8 @@ jobs:
 
     - name: Configure Team ID
       run: |
-        # Update the Xcode project with Team ID
-        sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = ai.nextax.startsmart;/DEVELOPMENT_TEAM = NKG2BDUB85;\
+        # Add Team ID to both Debug and Release configurations
+        sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = ai\.nextax\.startsmart;/DEVELOPMENT_TEAM = NKG2BDUB85;\
 				PRODUCT_BUNDLE_IDENTIFIER = ai.nextax.startsmart;/g' ios/App/App.xcodeproj/project.pbxproj
 
     - name: Setup Ruby
@@ -36,6 +36,27 @@ jobs:
         ruby-version: '3.2'
         bundler-cache: true
         working-directory: ios/App
+
+    - name: Create Fastfile
+      run: |
+        mkdir -p ios/App/fastlane
+        cat > ios/App/fastlane/Fastfile << 'EOF'
+        default_platform(:ios)
+
+        platform :ios do
+          lane :beta do
+            build_app(workspace: "App.xcworkspace", scheme: "App", configuration: "Release", export_method: "app-store")
+            upload_to_testflight(api_key: { key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"], issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"], key_filepath: ENV["APP_STORE_CONNECT_API_KEY_PATH"] }, skip_waiting_for_build_processing: true)
+          end
+        end
+        EOF
+
+    - name: Create Gemfile
+      run: |
+        cat > ios/App/fastlane/Gemfile << 'EOF'
+        source "https://rubygems.org"
+        gem "fastlane"
+        EOF
 
     - name: Deploy
       env:
