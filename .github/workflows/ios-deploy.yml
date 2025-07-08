@@ -19,13 +19,21 @@ jobs:
     - name: Install dependencies
       run: npm install
 
+    - name: Build Static Assets
+      run: |
+        mkdir -p dist
+        cp index.html dist/
+        cp -r *.js dist/ 2>/dev/null || true
+        cp -r *.css dist/ 2>/dev/null || true
+        cp -r assets dist/ 2>/dev/null || true
+
     - name: Fix Capacitor Config
       run: |
         cat > capacitor.config.js << 'EOF'
         const config = {
           appId: 'ai.nextax.startsmart',
           appName: 'StartSmart',
-          webDir: '.',
+          webDir: 'dist',
           server: {
             androidScheme: 'https'
           },
@@ -35,6 +43,10 @@ jobs:
         };
         module.exports = config;
         EOF
+
+    - name: Install Capacitor
+      run: |
+        npm install @capacitor/core @capacitor/cli @capacitor/ios
 
     - name: Setup iOS Platform
       run: |
