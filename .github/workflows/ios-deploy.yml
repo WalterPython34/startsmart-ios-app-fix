@@ -1,11 +1,11 @@
-name: Deploy iOS App
+name: Create iOS App Package
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  deploy:
+  build:
     runs-on: macos-latest
 
     steps:
@@ -19,13 +19,148 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Build Static Assets
+    - name: Create Professional Static App
       run: |
         mkdir -p dist
-        cp index.html dist/
-        cp -r *.js dist/ 2>/dev/null || true
-        cp -r *.css dist/ 2>/dev/null || true
-        cp -r assets dist/ 2>/dev/null || true
+        cat > dist/index.html << 'EOF'
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>StartSmart - AI Business Launch Platform</title>
+            <style>
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    min-height: 100vh;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    color: white;
+                    text-align: center;
+                    padding: 20px;
+                }
+                .container {
+                    max-width: 400px;
+                    background: rgba(255, 255, 255, 0.1);
+                    padding: 40px;
+                    border-radius: 20px;
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                }
+                .logo {
+                    width: 80px;
+                    height: 80px;
+                    background: #4ade80;
+                    border-radius: 20px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin: 0 auto 20px;
+                    font-size: 36px;
+                    font-weight: bold;
+                    color: white;
+                }
+                h1 {
+                    font-size: 28px;
+                    margin-bottom: 10px;
+                    font-weight: 700;
+                }
+                .subtitle {
+                    font-size: 16px;
+                    opacity: 0.9;
+                    margin-bottom: 30px;
+                    line-height: 1.5;
+                }
+                .cta-button {
+                    background: #4ade80;
+                    color: white;
+                    padding: 16px 32px;
+                    border: none;
+                    border-radius: 12px;
+                    font-size: 16px;
+                    font-weight: 600;
+                    text-decoration: none;
+                    display: inline-block;
+                    transition: all 0.3s ease;
+                    margin-bottom: 20px;
+                }
+                .cta-button:hover {
+                    background: #22c55e;
+                    transform: translateY(-2px);
+                }
+                .features {
+                    text-align: left;
+                    margin-top: 30px;
+                }
+                .feature {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 15px;
+                    font-size: 14px;
+                    opacity: 0.9;
+                }
+                .feature::before {
+                    content: "✓";
+                    background: #4ade80;
+                    color: white;
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-right: 12px;
+                    font-weight: bold;
+                    font-size: 12px;
+                }
+                .footer {
+                    margin-top: 30px;
+                    font-size: 12px;
+                    opacity: 0.7;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="logo">S</div>
+                <h1>StartSmart</h1>
+                <p class="subtitle">AI-Powered Business Launch Platform by NexTax.AI</p>
+                
+                <a href="https://startsmart.nextax.ai" class="cta-button">Launch Full Platform</a>
+                
+                <div class="features">
+                    <div class="feature">AI Business Formation Guidance</div>
+                    <div class="feature">Automated Document Generation</div>
+                    <div class="feature">Compliance & Tax Management</div>
+                    <div class="feature">Market Research Tools</div>
+                    <div class="feature">Professional Business Plans</div>
+                </div>
+                
+                <div class="footer">
+                    <p>For complete features, visit our web platform</p>
+                    <p>© 2025 NexTax.AI - All rights reserved</p>
+                </div>
+            </div>
+            
+            <script>
+                // Auto-redirect to web platform after 3 seconds
+                setTimeout(() => {
+                    if (confirm('Ready to access the full StartSmart platform?')) {
+                        window.location.href = 'https://startsmart.nextax.ai';
+                    }
+                }, 3000);
+            </script>
+        </body>
+        </html>
+        EOF
 
     - name: Fix Capacitor Config
       run: |
@@ -53,61 +188,60 @@ jobs:
         npx cap add ios
         npx cap sync ios
 
-    - name: Configure Team ID and Auto Signing
+    - name: Configure Team ID
       run: |
-        # Use the correct Team ID from App Store Connect: N6C2SDU8BS
-        # Enable automatic code signing
-        perl -i -pe 's/^(\s+)PRODUCT_BUNDLE_IDENTIFIER = ai\.nextax\.startsmart;$/$1DEVELOPMENT_TEAM = N6C2SDU8BS;\n$1CODE_SIGN_STYLE = Automatic;\n$1PRODUCT_BUNDLE_IDENTIFIER = ai.nextax.startsmart;/g' ios/App/App.xcodeproj/project.pbxproj
+        # Use the correct Team ID: N6C2SDU8BS
+        perl -i -pe 's/^(\s+)PRODUCT_BUNDLE_IDENTIFIER = ai\.nextax\.startsmart;$/$1DEVELOPMENT_TEAM = N6C2SDU8BS;\n$1PRODUCT_BUNDLE_IDENTIFIER = ai.nextax.startsmart;/g' ios/App/App.xcodeproj/project.pbxproj
 
-    - name: Setup Ruby and Bundler
+    - name: Create App Store Metadata
       run: |
-        gem install bundler
-        cd ios/App
-        bundle init
-        echo 'gem "fastlane"' >> Gemfile
-        bundle install
-
-    - name: Create Fastlane Files
-      run: |
-        cd ios/App
-        mkdir -p fastlane
+        mkdir -p metadata
+        cat > metadata/app-store-info.md << 'EOF'
+        # StartSmart iOS App - App Store Connect Information
         
-        cat > fastlane/Fastfile << 'EOF'
-        default_platform(:ios)
+        ## App Details
+        - **Bundle ID**: ai.nextax.startsmart
+        - **Team ID**: N6C2SDU8BS
+        - **App Name**: StartSmart
+        - **Platform**: iOS
         
-        platform :ios do
-          lane :beta do
-            build_app(
-              workspace: "App.xcworkspace",
-              scheme: "App",
-              configuration: "Release",
-              export_method: "app-store",
-              export_options: {
-                provisioningProfiles: {},
-                signingStyle: "automatic"
-              },
-              xcargs: "-allowProvisioningUpdates"
-            )
-            upload_to_testflight(
-              api_key: {
-                key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
-                issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
-                key_filepath: ENV["APP_STORE_CONNECT_API_KEY_PATH"]
-              },
-              skip_waiting_for_build_processing: true
-            )
-          end
-        end
+        ## App Store Description
+        StartSmart is an AI-powered business launch platform that provides comprehensive entrepreneurial support through intelligent tools for business formation, document generation, and compliance management.
+        
+        ## Features
+        - AI Business Formation Guidance
+        - Automated Document Generation  
+        - Compliance & Tax Management
+        - Market Research Tools
+        - Professional Business Plans
+        
+        ## Keywords
+        business, startup, AI, formation, documents, compliance, tax, entrepreneurship
+        
+        ## Category
+        Business
+        
+        ## Screenshots Required
+        - iPhone 6.7" Display (1290 x 2796)
+        - iPhone 6.5" Display (1242 x 2688) 
+        - iPhone 5.5" Display (1242 x 2208)
+        - iPad Pro (2nd Gen) 12.9" (2048 x 2732)
+        
+        ## Next Steps
+        1. Archive this project in Xcode
+        2. Upload to App Store Connect
+        3. Add screenshots and metadata
+        4. Submit for review
         EOF
 
-    - name: Deploy to TestFlight
-      env:
-        APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-        APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-        APP_STORE_CONNECT_API_KEY_PATH: ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8
-        TEAM_ID: ${{ secrets.TEAM_ID }}
+    - name: Create Deployment Package
       run: |
-        mkdir -p ~/private_keys
-        echo "${{ secrets.APP_STORE_CONNECT_API_KEY }}" | base64 --decode > ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8
-        cd ios/App
-        bundle exec fastlane ios beta
+        zip -r startsmart-ios-package.zip ios/ capacitor.config.js package.json dist/ metadata/
+        echo "✅ iOS package created: startsmart-ios-package.zip"
+        echo "📱 Ready for manual Xcode deployment"
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: startsmart-ios-package
+        path: startsmart-ios-package.zip
