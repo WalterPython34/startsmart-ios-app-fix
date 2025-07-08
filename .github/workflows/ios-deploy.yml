@@ -26,9 +26,19 @@ jobs:
 
     - name: Configure Team ID
       run: |
-        # Add Team ID to both Debug and Release configurations
-        sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = ai\.nextax\.startsmart;/DEVELOPMENT_TEAM = NKG2BDUB85;\
-				PRODUCT_BUNDLE_IDENTIFIER = ai.nextax.startsmart;/g' ios/App/App.xcodeproj/project.pbxproj
+        python3 -c "
+        import re
+        with open('ios/App/App.xcodeproj/project.pbxproj', 'r') as f:
+            content = f.read()
+        
+        # Replace PRODUCT_BUNDLE_IDENTIFIER lines with DEVELOPMENT_TEAM + PRODUCT_BUNDLE_IDENTIFIER
+        pattern = r'(\s+)PRODUCT_BUNDLE_IDENTIFIER = ai\.nextax\.startsmart;'
+        replacement = r'\1DEVELOPMENT_TEAM = NKG2BDUB85;\n\1PRODUCT_BUNDLE_IDENTIFIER = ai.nextax.startsmart;'
+        content = re.sub(pattern, replacement, content)
+        
+        with open('ios/App/App.xcodeproj/project.pbxproj', 'w') as f:
+            f.write(content)
+        "
 
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
