@@ -53,10 +53,11 @@ jobs:
         npx cap add ios
         npx cap sync ios
 
-    - name: Configure Team ID
+    - name: Configure Team ID and Auto Signing
       run: |
         # Use the correct Team ID from App Store Connect: N6C2SDU8BS
-        perl -i -pe 's/^(\s+)PRODUCT_BUNDLE_IDENTIFIER = ai\.nextax\.startsmart;$/$1DEVELOPMENT_TEAM = N6C2SDU8BS;\n$1PRODUCT_BUNDLE_IDENTIFIER = ai.nextax.startsmart;/g' ios/App/App.xcodeproj/project.pbxproj
+        # Enable automatic code signing
+        perl -i -pe 's/^(\s+)PRODUCT_BUNDLE_IDENTIFIER = ai\.nextax\.startsmart;$/$1DEVELOPMENT_TEAM = N6C2SDU8BS;\n$1CODE_SIGN_STYLE = Automatic;\n$1PRODUCT_BUNDLE_IDENTIFIER = ai.nextax.startsmart;/g' ios/App/App.xcodeproj/project.pbxproj
 
     - name: Setup Ruby and Bundler
       run: |
@@ -80,7 +81,12 @@ jobs:
               workspace: "App.xcworkspace",
               scheme: "App",
               configuration: "Release",
-              export_method: "app-store"
+              export_method: "app-store",
+              export_options: {
+                provisioningProfiles: {},
+                signingStyle: "automatic"
+              },
+              xcargs: "-allowProvisioningUpdates"
             )
             upload_to_testflight(
               api_key: {
