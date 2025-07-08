@@ -19,63 +19,93 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Setup iOS
+    - name: Fix Capacitor Config
       run: |
-        npm run ios:add
-        npm run ios:sync
+        # Convert capacitor.config.js to proper format
+        cat > capacitor.config.js << 'EOF'
+        const config = {
+          appId: 'ai.nextax.startsmart',
+          appName: 'StartSmart',
+          webDir: '.',
+          server: {
+            androidScheme: 'https'
+          },
+          ios: {
+            scheme: 'StartSmart'
+          }
+        };
 
-    - name: Configure Team ID
+        module.exports = config;
+        EOF
+
+    - name: Setup iOS Platform
       run: |
-        python3 -c "
-        import re
-        with open('ios/App/App.xcodeproj/project.pbxproj', 'r') as f:
-            content = f.read()
-        
-        # Replace PRODUCT_BUNDLE_IDENTIFIER lines with DEVELOPMENT_TEAM + PRODUCT_BUNDLE_IDENTIFIER
-        pattern = r'(\s+)PRODUCT_BUNDLE_IDENTIFIER = ai\.nextax\.startsmart;'
-        replacement = r'\1DEVELOPMENT_TEAM = NKG2BDUB85;\n\1PRODUCT_BUNDLE_IDENTIFIER = ai.nextax.startsmart;'
-        content = re.sub(pattern, replacement, content)
-        
-        with open('ios/App/App.xcodeproj/project.pbxproj', 'w') as f:
-            f.write(content)
-        "
+        npx cap add ios
+        npx cap sync ios
 
-    - name: Setup Ruby
+    - name: Configure Team ID in Xcode Project
+      run: |
+        # Add Team ID to Xcode project using sed with proper escaping
+        PROJECT_FILE="ios/App/App.xcodeproj/project.pbxproj"
+        sed -i '' '/PRODUCT_BUNDLE_IDENTIFIER = ai\.nextax\.startsmart;/i\
+				DEVELOPMENT_TEAM = NKG2BDUB85;' "$PROJECT_FILE"
+
+    - name: Setup Ruby and Fastlane
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: '3.2'
-        bundler-cache: true
+        bundler-cache: false
         working-directory: ios/App
 
-    - name: Create Fastfile
+    - name: Create Fastlane Configuration
       run: |
-        mkdir -p ios/App/fastlane
-        cat > ios/App/fastlane/Fastfile << 'EOF'
+        cd ios/App
+        mkdir -p fastlane
+        
+        # Create Fastfile
+        cat > fastlane/Fastfile << 'EOF'
         default_platform(:ios)
 
         platform :ios do
           lane :beta do
-            build_app(workspace: "App.xcworkspace", scheme: "App", configuration: "Release", export_method: "app-store")
-            upload_to_testflight(api_key: { key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"], issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"], key_filepath: ENV["APP_STORE_CONNECT_API_KEY_PATH"] }, skip_waiting_for_build_processing: true)
+            build_app(
+              workspace: "App.xcworkspace",
+              scheme: "App", 
+              configuration: "Release",
+              export_method: "app-store"
+            )
+            upload_to_testflight(
+              api_key: {
+                key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+                issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"], 
+                key_filepath: ENV["APP_STORE_CONNECT_API_KEY_PATH"]
+              },
+              skip_waiting_for_build_processing: true
+            )
           end
         end
         EOF
-
-    - name: Create Gemfile
-      run: |
-        cat > ios/App/fastlane/Gemfile << 'EOF'
+        
+        # Create Gemfile
+        cat > fastlane/Gemfile << 'EOF'
         source "https://rubygems.org"
         gem "fastlane"
         EOF
+        
+        # Install fastlane
+        bundle install
 
-    - name: Deploy
+    - name: Deploy to TestFlight
       env:
         APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
         APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         APP_STORE_CONNECT_API_KEY_PATH: ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8
         TEAM_ID: ${{ secrets.TEAM_ID }}
       run: |
+        # Create API key file
         mkdir -p ~/private_keys
         echo "${{ secrets.APP_STORE_CONNECT_API_KEY }}" | base64 --decode > ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8
+        
+        # Run fastlane deployment
         cd ios/App
         bundle exec fastlane ios beta
