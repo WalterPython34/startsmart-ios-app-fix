@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StartSmart - Business Formation Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 400px;
+            padding: 40px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: #fff;
+            border-radius: 20px;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        
+        .features {
+            text-align: left;
+            margin: 30px 0;
+        }
+        
+        .feature {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        .feature-icon {
+            width: 24px;
+            height: 24px;
+            background: #4CAF50;
+            border-radius: 50%;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        .launch-button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+        
+        .launch-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .coming-soon {
+            margin-top: 20px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">SS</div>
+        <h1>StartSmart</h1>
+        <p class="subtitle">AI-Powered Business Formation Assistant</p>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🤖</div>
+                <div>AI Business Guidance</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📋</div>
+                <div>Document Generation</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <div>Progress Tracking</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">⚖️</div>
+                <div>Compliance Management</div>
+            </div>
+        </div>
+        
+        <button class="launch-button" onclick="launchFullApp()">
+            Launch Full Platform
+        </button>
+        
+        <p class="coming-soon">
+            Full mobile features coming soon
+        </p>
+    </div>
+
+    <script>
+        function launchFullApp() {
+            // Redirect to full web platform
+            window.open('https://startsmart.nextax.ai', '_blank');
+        }
+        
+        // iOS-specific features
+        if (window.Capacitor) {
+            console.log('Running in Capacitor');
+            // Add mobile-specific functionality here
+        }
+    </script>
+</body>
+</html>
